@@ -1,0 +1,12 @@
+# Python / venv
+.venv/
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
+
+# Excel/OS temporaires
+~$*.xlsx
+.DS_Store
+Thumbs.db
