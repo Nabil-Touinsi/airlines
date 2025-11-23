@@ -1,0 +1,16 @@
+AIR-20 — Rapport KNN (classification fleet_bucket)
+
+Meilleur k : 1
+Accuracy (test) : 0.9790
+F1 macro (test) : 0.9785
+
+Classification report détaillé :
+              precision    recall  f1-score   support
+
+       Large       0.97      0.97      0.97       123
+      Medium       0.98      0.97      0.97       124
+       Small       0.99      1.00      1.00       134
+
+    accuracy                           0.98       381
+   macro avg       0.98      0.98      0.98       381
+weighted avg       0.98      0.98      0.98       381
