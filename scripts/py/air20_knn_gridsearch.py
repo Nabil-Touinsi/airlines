@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-AIR-20 — GridSearch k et évaluation KNN (version mise à jour)
+AIR-20 — GridSearch k et évaluation KNN
 - Source : release/features_knn.csv
 - Cible  : fleet_bucket (Small/Medium/Large)
-- Features : uniquement les indicateurs globaux (plus stables)
+- Split  : 80% train / 20% test
+- Grid   : k ∈ {1,3,5,7,9}
+- Sorties :
+    * release/knn_confusion_matrix.csv
+    * release/knn_report.txt
+    * release/knn_confusion_matrix.png
+    * release/knn_f1_per_class.png
 """
 
 from pathlib import Path
@@ -33,22 +39,11 @@ if "fleet_bucket" not in df.columns:
     raise SystemExit("Colonne 'fleet_bucket' introuvable dans features_knn.csv")
 
 # ---------- 2) Préparer X (features) et y (cible) ----------
-# On garde désormais seulement les features globales et cohérentes
-feature_cols = [
-    "n_models",
-    "diversity",
-    "new_gen_share",
-    "indice_public",
-    "indice_penalise"
-]
-
-# Filtre de sécurité
-feature_cols = [c for c in feature_cols if c in df.columns]
-
-X = df[feature_cols].copy()
+# On enlève les colonnes non pertinentes pour le modèle
+cols_to_drop = ["airline", "fleet_bucket", "fleet_size"]  # évite la fuite via fleet_size
+X = df.drop(columns=[c for c in cols_to_drop if c in df.columns])
 y = df["fleet_bucket"]
 
-print("Features utilisées :", feature_cols)
 print("Shape X :", X.shape)
 print("Répartition de y :")
 print(y.value_counts())
@@ -73,7 +68,7 @@ knn = KNeighborsClassifier()
 grid = GridSearchCV(
     estimator=knn,
     param_grid=param_grid,
-    scoring="f1_macro",
+    scoring="f1_macro",  # on optimise F1 macro
     cv=5,
     n_jobs=-1,
 )
@@ -109,7 +104,7 @@ OUT_CM.parent.mkdir(parents=True, exist_ok=True)
 cm_df.to_csv(OUT_CM, encoding="utf-8")
 print(f"\nMatrice de confusion sauvegardée dans : {OUT_CM}")
 
-# ---------- 6bis) Plot matrice de confusion ----------
+# ---------- 6bis) Plot matrice de confusion (PNG) ----------
 plt.figure()
 plt.imshow(cm, interpolation="nearest")
 plt.xticks(range(len(labels_sorted)), labels_sorted)
@@ -121,10 +116,13 @@ plt.tight_layout()
 plt.savefig("release/knn_confusion_matrix.png", dpi=150)
 plt.close()
 
-print("Plot matrice sauvegardé : release/knn_confusion_matrix.png")
+print("Matrice de confusion plot sauvegardée dans : release/knn_confusion_matrix.png")
 
-# ---------- 7) Classification report ----------
+# ---------- 7) Classification report (texte + F1 par classe) ----------
+# a) dict pour récupérer les F1 par classe
 report_dict = classification_report(y_test, y_pred, output_dict=True)
+
+# b) texte pour le fichier .txt
 report_text = classification_report(y_test, y_pred)
 
 with OUT_REPORT.open("w", encoding="utf-8") as f:
@@ -135,9 +133,9 @@ with OUT_REPORT.open("w", encoding="utf-8") as f:
     f.write("Classification report détaillé :\n")
     f.write(report_text)
 
-print(f"Rapport sauvegardé : {OUT_REPORT}")
+print(f"Rapport détaillé sauvegardé dans : {OUT_REPORT}")
 
-# ---------- 8) F1 par classe ----------
+# ---------- 8) Graphique F1 par classe ----------
 cls_labels = []
 f1_scores = []
 
@@ -156,6 +154,6 @@ plt.tight_layout()
 plt.savefig("release/knn_f1_per_class.png", dpi=150)
 plt.close()
 
-print("Graphique F1 par classe sauvegardé : release/knn_f1_per_class.png")
+print("Graphique F1 par classe sauvegardé dans : release/knn_f1_per_class.png")
 
-
+print("\nOK : AIR-20 terminé.")

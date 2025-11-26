@@ -65,8 +65,15 @@ cols = [
     "diversity",
     "modernity_index",
     "new_gen_share",
+    "pct_a220",
+    "pct_787",
+    "pct_a350",
+    "pct_a330neo",
+    "pct_neo",
+    "pct_max",
+    "pct_newgen_narrow",
+    "pct_newgen_wide",
 ]
-
 
 missing = [c for c in cols if c not in merged.columns]
 if missing:
